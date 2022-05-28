@@ -1,10 +1,10 @@
 use bevy::prelude::*;
-use std::io::stdin;
 
-use crate::{
-	network::{Network, NetworkMessage, NetworkMessageKind, Networkable},
-	AppState,
-};
+use crate::game::counters::{Coins, Trophies};
+use crate::network::Network;
+use crate::types::NetworkMessage;
+use crate::types::NetworkMessageResponse;
+use crate::AppState;
 
 pub struct ConnectPlugin;
 
@@ -20,16 +20,6 @@ pub struct ConnectInformation {
 	account_seed: Option<String>,
 }
 
-impl Networkable for ConnectInformation {
-	fn to_network_message(&self) -> NetworkMessage {
-		if let Some(seed) = self.account_seed.clone() {
-			NetworkMessage { kind: NetworkMessageKind::Connect, data: seed.as_bytes().to_vec() }
-		} else {
-			panic!("aaa")
-		}
-	}
-}
-
 impl ConnectInformation {
 	pub fn new() -> Self {
 		Self { account_seed: None }
@@ -38,23 +28,31 @@ impl ConnectInformation {
 
 pub fn enter_state(
 	mut state: ResMut<State<AppState>>,
-	mut conn_info: ResMut<ConnectInformation>,
+	mut _conn_info: ResMut<ConnectInformation>,
 	mut net: ResMut<Network>,
+	mut coins: ResMut<Coins>,
+	mut trophies: ResMut<Trophies>,
 ) {
-	println!("Enter Connect State");
-
-	let mut account_seed = String::new();
+	/* 	let mut account_seed = String::new();
 	println!("Enter your Account Seed: ");
 	stdin().read_line(&mut account_seed).ok().expect("qed");
 	account_seed.pop();
 
-	conn_info.account_seed = Some(account_seed);
-	let msg = conn_info.to_network_message();
+	conn_info.account_seed = Some(account_seed); */
+
+	let msg = NetworkMessage::Connect("aaa".to_string());
 	net.send_message(&msg);
+
+	let response = net.read_message().unwrap();
+	match response {
+		NetworkMessageResponse::Connect(user_data, _) => {
+			*coins = Coins(user_data.coins as usize);
+			trophies.won = user_data.trophies.0 as usize;
+			trophies.rounds = user_data.trophies.1 as usize;
+		},
+	}
 
 	state.set(AppState::Menu).unwrap();
 }
 
-pub fn exit_state() {
-	println!("Exit Connect State");
-}
+pub fn exit_state() {}

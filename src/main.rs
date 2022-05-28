@@ -2,9 +2,9 @@
 
 mod connect;
 mod game;
-mod login;
 mod menu;
 mod network;
+mod types;
 
 use crate::{game::GamePlugin, menu::MenuPlugin};
 use bevy::prelude::*;

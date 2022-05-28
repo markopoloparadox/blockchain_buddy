@@ -6,6 +6,7 @@ use crate::{
 		ui::UiRoot,
 		Z_BUDDY,
 	},
+	network::ShouldSaveGame,
 	AppState,
 };
 use bevy::{
@@ -32,7 +33,8 @@ impl Plugin for ShopPlugin {
 					.with_system(position_pad)
 					.with_system(buy_buddy)
 					.with_system(update_price_counter)
-					.with_system(battle_button),
+					.with_system(battle_button)
+					.with_system(save_button),
 			)
 			.add_system_set(SystemSet::on_exit(AppState::Shop).with_system(exit_shop));
 	}
@@ -55,6 +57,7 @@ pub fn spawn_shop_base(mut commands: Commands, asset_server: Res<AssetServer>) {
 pub struct ShopState {
 	battle_button: Entity,
 	trash: Entity,
+	save_button: Entity,
 }
 
 pub fn enter_shop(
@@ -66,6 +69,7 @@ pub fn enter_shop(
 ) {
 	let ui_root = ui_root.single();
 	let battle_button = spawn_battle_button(&mut commands, &asset_server, ui_root);
+	let save_button = spawn_save_button(&mut commands, &asset_server, ui_root);
 	let trash = commands
 		.spawn_bundle(SpriteBundle {
 			texture: asset_server.load("trash.png"),
@@ -75,7 +79,7 @@ pub fn enter_shop(
 		})
 		.insert(Trash)
 		.id();
-	commands.insert_resource(ShopState { battle_button, trash });
+	commands.insert_resource(ShopState { battle_button, trash, save_button });
 
 	// clean up old shop entities
 	for (entity, side) in buddies.iter() {
@@ -115,6 +119,7 @@ pub fn exit_shop(
 	}
 	commands.entity(shop_state.battle_button).despawn_recursive();
 	commands.entity(shop_state.trash).despawn_recursive();
+	commands.entity(shop_state.save_button).despawn_recursive();
 }
 
 #[derive(Component)]
@@ -386,6 +391,54 @@ fn update_price_counter(
 	for (mut text, parent) in counters.iter_mut() {
 		if let Ok(price) = prices.get(parent.0) {
 			text.sections[0].value = price.0.to_string();
+		}
+	}
+}
+
+#[derive(Component)]
+pub struct SaveButton;
+
+fn spawn_save_button(
+	commands: &mut Commands,
+	asset_server: &AssetServer,
+	ui_root: Entity,
+) -> Entity {
+	commands
+		.spawn_bundle(ButtonBundle {
+			style: Style {
+				size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+				// center button
+				margin: Rect::all(Val::Auto),
+				// horizontally center child text
+				justify_content: JustifyContent::Center,
+				// vertically center child text
+				align_items: AlignItems::Center,
+				position: Rect { top: Val::Px(-250.0), ..default() },
+				..default()
+			},
+			color: UiColor(Color::rgba(0f32, 0f32, 0f32, 0f32)),
+			..default()
+		})
+		.insert(SaveButton)
+		.with_children(|parent| {
+			parent
+				.spawn_bundle(ImageBundle {
+					image: asset_server.load("save_button.png").into(),
+					..default()
+				})
+				.insert(FocusPolicy::Pass);
+		})
+		.id()
+}
+
+pub fn save_button(
+	mut state: ResMut<State<AppState>>,
+	mut save_game: ResMut<ShouldSaveGame>,
+	interaction_query: Query<&Interaction, (Changed<Interaction>, With<SaveButton>)>,
+) {
+	for interaction in interaction_query.iter() {
+		if *interaction == Interaction::Clicked {
+			save_game.0 = true;
 		}
 	}
 }
