@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'cart-does-a-jam'",
+            "name": "Debug executable 'blockchain_buddy'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=cart-does-a-jam",
-                    "--package=cart-does-a-jam"
+                    "--bin=blockchain_buddy",
+                    "--package=blockchain_buddy"
                 ],
                 "filter": {
-                    "name": "cart-does-a-jam",
+                    "name": "blockchain_buddy",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'cart-does-a-jam'",
+            "name": "Debug unit tests in executable 'blockchain_buddy'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=cart-does-a-jam",
-                    "--package=cart-does-a-jam"
+                    "--bin=blockchain_buddy",
+                    "--package=blockchain_buddy"
                 ],
                 "filter": {
-                    "name": "cart-does-a-jam",
+                    "name": "blockchain_buddy",
                     "kind": "bin"
                 }
             },
